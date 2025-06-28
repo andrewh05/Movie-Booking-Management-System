@@ -59,4 +59,11 @@ cd Movie-Booking-Managment-System
 ```bash
 pip install mysql-connector-python
 ```
+### 3. Set Up the Database
+
+```bash
+python create_mv.py
+```
+Note: Ensure MySQL server is running and accessible with `root` user (adjust credentials in the script if needed).
+
 
