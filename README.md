@@ -82,9 +82,13 @@ python booking.py
 ### To-Do / Improvements
 
  Add user login functionality
+ 
  Export booking data to CSV
+ 
  Add movie duration and genre
+ 
  Prevent overlapping bookings
+ 
  Implement seat pricing logic
 
 ### Contributing
