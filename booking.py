@@ -14,16 +14,10 @@ cr = cn.cursor()
 win = Tk()
 win.geometry('600x350')
 win.title("M o v i e")
-win.resizable(0,0)
+win.resizable(0, 0)
 
 global data
 data = []
-
-def unlock_booked_seats():
-    for index in range(len(bt)):
-        if bt[index].cget("bg") == "red":
-            bt[index].config(state='normal')
-
 
 def save_booking():
     selected_movie = cb.get()
@@ -51,13 +45,16 @@ def save_booking():
 
         cn.commit()
         print("Booking saved successfully.")
-
         load_seats(cb.get())
 
     except mysql.connector.Error as err:
         print("MySQL Error:", err)
 
-
+def toggle_or_unbook(index):
+    if bt[index].cget("bg") == "red":
+        unbook_seat(index)
+    else:
+        toggle_seat(index)
 
 def toggle_seat(index):
     if ch[index] == 0:
@@ -67,19 +64,56 @@ def toggle_seat(index):
         ch[index] = 0
         bt[index].config(bg="SystemButtonFace")
 
+def unbook_seat(index):
+    selected_movie = cb.get()
+    time = vr.get()
+
+    if selected_movie == "Select Movie" or time == 0:
+        print("Please select a movie and time before unbooking.")
+        return
+
+    try:
+        cr.execute("SELECT mv_id FROM movie WHERE name = %s", (selected_movie,))
+        movie_data = cr.fetchone()
+        if not movie_data:
+            print("Movie not found.")
+            return
+
+        mv_id = movie_data[0]
+        seat_num = index + 1
+
+        cr.execute("DELETE FROM booking WHERE b_mvid = %s AND b_time = %s AND seat = %s", (mv_id, time, seat_num))
+        cn.commit()
+
+        ch[index] = 0
+        bt[index].config(bg="SystemButtonFace", state='normal')
+        print(f"Seat {seat_num} unbooked.")
+
+    except mysql.connector.Error as err:
+        print("MySQL Error:", err)
+
+def unlock_booked_seats():
+    for index in range(len(bt)):
+        if bt[index].cget("bg") == "red":
+            bt[index].config(state='normal')  # Enable click
+    print("Booked seats are now clickable for unbooking.")
+
 def showseat():
     for i in range(nbr_row):
         for j in range(nbr_col):
             index = i * nbr_col + j
-            btn = Button(win, text=str(index + 1), width=4, height=1,
-                            command=lambda idx=index: toggle_seat(idx))
+
+            def create_command(idx=index):
+                return lambda: toggle_or_unbook(idx)
+
+            btn = Button(win, text=str(index + 1), width=4, height=1, command=create_command())
             x = start_x + j * (btn_width + spacing_x)
             y = start_y + i * (btn_height + spacing_y)
             btn.place(x=x, y=y)
             bt.append(btn)
 
 def load_seats(selected_movie):
-    global ch, bt, cr
+    global ch, bt
 
     for i in range(len(ch)):
         ch[i] = 0
@@ -106,7 +140,7 @@ def load_seats(selected_movie):
                 seat_num = row[0] - 1
                 if 0 <= seat_num < len(ch):
                     ch[seat_num] = 1
-                    bt[seat_num].config(bg="red", state='disabled')
+                    bt[seat_num].config(bg="red", state='disabled')  # Disabled until UnBook is clicked
 
         else:
             print("Movie not found.")
@@ -117,12 +151,10 @@ def load_seats(selected_movie):
             ch[i] = 0
             bt[i].config(bg="SystemButtonFace", state='normal')
 
-        
 def on_time_change():
     selected = cb.get()
     if selected != "Select Movie":
         load_seats(selected)
-
 
 def on_selection(event):
     selected = cb.get()
@@ -131,7 +163,7 @@ def on_selection(event):
 def datas():
     global data
     data = [] 
-    sql = "SELECT * FROM movie where activ = '1'"
+    sql = "SELECT * FROM movie WHERE activ = '1'"
     try:
         cr.execute(sql)
         rows = cr.fetchall()
@@ -172,7 +204,6 @@ def reset_all_seats():
 def exit():
     win.destroy()
 
-
 nbr_col = 5
 nbr_row = 6
 
@@ -207,14 +238,12 @@ r1 = Radiobutton(f1, text="6:00 --> 7:30", variable=vr, value=6, command=on_time
 r2 = Radiobutton(f1, text="8:00 --> 9:30", variable=vr, value=8, command=on_time_change)
 r3 = Radiobutton(f1, text="10:00 --> 11:30", variable=vr, value=10, command=on_time_change)
 
-
 showseat()
 
 bt1 = Button(win, text="New", width=8, command=reset_all_seats)
 bt2 = Button(win, text="Save", width=8, command=save_booking)
 bt3 = Button(win, text="UnBook", width=8, command=unlock_booked_seats)
 bt4 = Button(win, text="Exit", width=8, command=exit)
-
 
 lb1.place(x=180, y=10)
 lb2.place(x=20, y=60)
