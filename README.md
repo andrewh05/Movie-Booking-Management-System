@@ -66,4 +66,26 @@ python create_mv.py
 ```
 Note: Ensure MySQL server is running and accessible with `root` user (adjust credentials in the script if needed).
 
+### 4. Launch the Applications
+To manage movies:
+
+```bash
+python movie.py
+```
+
+To book seats:
+
+```bash
+python booking.py
+```
+
+### To-Do / Improvements
+ Add user login functionality
+ Export booking data to CSV
+ Add movie duration and genre
+ Prevent overlapping bookings
+ Implement seat pricing logic
+
+ ###Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
